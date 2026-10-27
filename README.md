@@ -30,12 +30,58 @@ Add the plugin to your OpenCode configuration:
 }
 ```
 
-For local development, install from this repository checkout:
+For local development, build this repository checkout:
 
 ```bash
-npm install
+npm ci
 npm run build
 ```
+
+Then point OpenCode at the built file (`dist/index.js`), not at the repository
+directory. See [OpenCode v2](#opencode-v2) for the v2 symlink.
+
+## OpenCode v2
+
+The package exports both plugin APIs from one entry point. OpenCode v1 loads the
+existing `server` export and behaves exactly as before. OpenCode v2 loads the
+`setup` export. Verified to load, register tools and execute them on OpenCode
+v2.0.22.
+
+On OpenCode 1.x, the object default export `{ id, server, setup }` is handled
+from v1.3.4 onwards (OpenCode's migration guide documents 1.18.29+). Older 1.x
+releases still load the tools via the named `MnemotecaPlugin` export but log a
+load error for the object default export.
+
+Install it in your v2 configuration under the `plugins` key (the legacy `plugin`
+key is also read):
+
+```json
+{
+  "plugins": ["opencode-mnemoteca"]
+}
+```
+
+Until the package is published, build a local checkout (`npm ci && npm run build`)
+and symlink the built **file** into the plugins directory:
+
+```bash
+ln -s /path/to/opencode-mnemoteca/dist/index.js ~/.config/opencode/plugins/mnemoteca.js
+```
+
+Do not point v2 at the repository **directory**: v2 only resolves `server` or
+`index` entries inside a directory and does not read `package.json#main`, so the
+plugin would be silently skipped. The relative `./core.js` and `./v2.js` imports
+resolve through the symlink's real path.
+
+On v2:
+
+- The five `memory_*` tools are registered with `codemode: false`, so they stay
+  directly callable instead of being folded into code mode.
+- The memory instructions are injected through the `context` hook on every agent
+  model request, so they are present at all times, including right after
+  compaction. The plugin deliberately uses this hook instead of v2's
+  `compaction` hook.
+- The v2 plugin context has no logging facility, so the plugin logs nothing.
 
 ## Upgrade from opencode-mnemosyne
 

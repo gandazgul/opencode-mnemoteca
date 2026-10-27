@@ -10,7 +10,7 @@
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "ci": "tsc --noEmit && tsc",
-    "test": "tsc --noEmit -p tsconfig.test.json && tsx src/index.test.ts"
+    "test": "tsc --noEmit -p tsconfig.test.json && tsx src/index.test.ts && tsx src/core.test.ts && tsx src/v2.test.ts"
   },
   "keywords": [
     "opencode",

@@ -114,6 +114,23 @@ test("returns Mnemoteca install guidance when the executable is missing", async 
   assert.equal(result, "Error: mnemoteca binary not found. Install it: https://github.com/gandazgul/mnemoteca#install");
 });
 
+test("surfaces the real CLI error instead of install guidance on a non-zero exit", async () => {
+  globalThis.Bun = {
+    spawn(command: string[], options: SpawnCall["options"]) {
+      if (command.includes("init")) {
+        return { stdout: "", stderr: "", exited: Promise.resolve(0) };
+      }
+      return { stdout: "", stderr: "Error: document 999 not found\n", exited: Promise.resolve(1) };
+    },
+  } as any;
+
+  const { hooks } = await createPlugin("/work/project");
+  await assert.rejects(
+    hooks.tool!.memory_delete!.execute({ id: 999 } as any, {} as any),
+    new Error("Error: document 999 not found"),
+  );
+});
+
 declare global {
   // Test boundary for the OpenCode host runtime.
   var Bun: any;
